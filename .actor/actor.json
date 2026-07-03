@@ -1,0 +1,10 @@
+{
+  "actorSpecification": 1,
+  "name": "infrared-intelligence-hub-pipeline-actor",
+  "version": "0.1",
+  "buildTag": "latest",
+  "defaultRunOptions": {
+    "memoryMbytes": 2048
+  },
+  "input": ".actor/input_schema.json"
+}
