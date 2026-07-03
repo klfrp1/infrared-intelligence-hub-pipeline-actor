@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "title": "Infrared Intelligence Hub Data Pipeline",
+  "type": "object",
+  "properties": {
+    "sourceMode": {
+      "type": "string",
+      "title": "Data Source Mode",
+      "description": "Choose between dynamic search discovery or processing a fixed seed file.",
+      "default": "discovery",
+      "editor": "select",
+      "prefill": "discovery",
+      "enum": ["discovery", "seed"],
+      "enumTitles": ["Discovery Mode (Scrape Live)", "Seed File Mode (Upload CSV)"]
+    },
+    "keyword": {
+      "type": "string",
+      "title": "Search Query / Patent Topic",
+      "description": "Enter infrared wavebands, material types, patent concepts, or specific applications.",
+      "editor": "textfield"
+    },
+    "searchDomain": {
+      "type": "string",
+      "title": "Source Domain / Target Entity",
+      "description": "Restrict search to a specific assignee, platform, or research source.",
+      "editor": "textfield"
+    },
+    "countryFilter": {
+      "type": "string",
+      "title": "Target Country / Jurisdiction",
+      "description": "Filter findings to specific jurisdictions or countries.",
+      "editor": "textfield"
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Max Listings to Discover",
+      "description": "Keep low, 5 to 20, for initial tests.",
+      "default": 5,
+      "minimum": 1
+    },
+    "openaiApiKey": {
+      "type": "string",
+      "title": "OpenAI API Key",
+      "description": "Your OpenAI API key. Do not share this key in screenshots or chat.",
+      "editor": "textfield",
+      "isSecret": true
+    },
+    "outputKvKey": {
+      "type": "string",
+      "title": "Output CSV File Name",
+      "description": "The enriched CSV output file name.",
+      "default": "infrared-intelligence-hub_enriched.csv",
+      "editor": "textfield"
+    },
+    "kvStoreId": {
+      "type": "string",
+      "title": "Key-Value Store ID",
+      "description": "Seed Mode only.",
+      "editor": "textfield"
+    },
+    "inputKvKey": {
+      "type": "string",
+      "title": "Seed CSV File Name",
+      "description": "Seed Mode only.",
+      "default": "infrared-intelligence-hub_seed.csv",
+      "editor": "textfield"
+    },
+    "phase": {
+      "type": "integer",
+      "title": "Pipeline Phase",
+      "description": "Use 1 for the first test.",
+      "default": 1
+    },
+    "batchSize": {
+      "type": "integer",
+      "title": "Batch Processing Limit",
+      "description": "Number of records to process in one run.",
+      "default": 100
+    },
+    "startRow": {
+      "type": "integer",
+      "title": "Starting Row Offset",
+      "description": "Starting row number for resuming a batch run.",
+      "default": 0
+    }
+  },
+  "required": ["sourceMode", "openaiApiKey"]
+}
