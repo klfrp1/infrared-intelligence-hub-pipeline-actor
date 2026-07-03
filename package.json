@@ -1,0 +1,14 @@
+{
+  "name": "infrared-intelligence-hub-pipeline-actor",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/main.js",
+  "dependencies": {
+    "apify": "^3.1.0",
+    "axios": "^1.7.0",
+    "csv-parse": "^5.5.0"
+  },
+  "scripts": {
+    "start": "node src/main.js"
+  }
+}
