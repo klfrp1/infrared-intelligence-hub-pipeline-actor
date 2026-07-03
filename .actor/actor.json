@@ -6,5 +6,5 @@
   "defaultRunOptions": {
     "memoryMbytes": 2048
   },
-  "input": ".actor/input_schema.json"
+  "input": "input_schema.json"
 }
