@@ -36,8 +36,11 @@ export async function discoverListings(keyword, searchDomain, countryFilter, max
 
     try {
         const patentRows = await fetchGooglePatentRows(searchQuery, limit);
-
-        for (const patent of patentRows.slice(0, limit)) {
+const relevantPatentRows = patentRows.filter((patent) => {
+    const text = JSON.stringify(patent).toLowerCase();
+    return /\binfrared\b|near[-\s]?infrared|far[-\s]?infrared|\bnir\b|\bswir\b|\bmwir\b|\blwir\b|thermal imaging|thermograph/.test(text);
+});
+        for (const patent of relevantPatentRows.slice(0, limit)) {
             normalizedRecords.push(makePatentRecord(patent, {
                 queryKeyword,
                 country,
