@@ -93,7 +93,7 @@ function buildPatentQuery(keyword, searchDomain) {
     }
 
     parts.push('infrared');
-    parts.push('far infrared OR thermal OR radiant OR sensor OR material');
+    
 
     return parts.join(' ');
 }
