@@ -11,7 +11,7 @@ import axios from 'axios';
  */
 export async function discoverListings(keyword, searchDomain, countryFilter, maxItems) {
     const queryKeyword = keyword || 'infrared patent';
-    const country = countryFilter || 'United States';
+   const country = countryFilter || 'Global';
     const limit = maxItems ?? 5;
 
     let assignedCategory = 'Infrared Tech';
