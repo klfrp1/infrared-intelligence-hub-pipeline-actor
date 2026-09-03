@@ -3,7 +3,9 @@ import { parse } from 'csv-parse/sync';
 import axios from 'axios';
 import { discoverListings } from './helpers/discover.js';
 import { enrichWithGooglePlaces, enrichWithOpenAI } from './helpers/enrich.js';
+import { fetchSourceEvidence } from './helpers/sourceEvidence.js';
 import { passesPublishGate } from './helpers/validate.js';
+
 import { buildOutputRow } from './transform.js';
 
 await Actor.init();
@@ -58,7 +60,9 @@ const processedPendingRows = [];
 for (const baselineRow of rawRows) {
     console.log(`Processing: ${baselineRow.listing_name}`);
     const placesData = await enrichWithGooglePlaces(baselineRow, null, phase);
-    const openaiData = await enrichWithOpenAI(baselineRow, openaiApiKey, phase, selectedQuestions);
+    const sourceEvidence = await fetchSourceEvidence(baselineRow);
+    const evidenceRow = { ...baselineRow, ...sourceEvidence };
+    const openaiData = await enrichWithOpenAI(evidenceRow, openaiApiKey, phase, selectedQuestions);
     const tabularOutput = buildOutputRow(baselineRow, placesData, openaiData, phase);
     const gateResult = passesPublishGate(tabularOutput, phase, selectedQuestions.length);
     tabularOutput.post_status = 'draft';
