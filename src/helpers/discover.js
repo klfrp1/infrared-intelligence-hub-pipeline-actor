@@ -27,6 +27,35 @@ export async function discoverListings(keyword, searchDomain, countryFilter, max
     } else if (/sensor|thermal|imaging|camera|swir|mwir|lwir/i.test(queryKeyword)) {
         assignedCategory = 'Infrared Sensors & Imaging';
     }
+    const exactPublicationNumber = queryKeyword.trim().toUpperCase();
+
+if (/^[A-Z]{2}\d{4,}[A-Z]\d?$/.test(exactPublicationNumber)) {
+    const patentUrl = `https://patents.google.com/patent/${exactPublicationNumber}/en`;
+
+    console.log(
+        `Exact patent number detected. Using direct Google Patents URL: ${patentUrl}`
+    );
+
+    return [
+        makePatentRecord(
+            {
+                title: exactPublicationNumber,
+                publicationNumber: exactPublicationNumber,
+                assignee: '',
+                snippet: `Direct Google Patents lookup for ${exactPublicationNumber}`,
+                url: patentUrl,
+                filingDate: '',
+                publicationDate: '',
+                status: 'To Verify',
+            },
+            {
+                queryKeyword,
+                country,
+                assignedCategory: 'Infrared Patents',
+            }
+        ),
+    ];
+}
 
     const searchQuery = buildPatentQuery(queryKeyword, searchDomain);
 
