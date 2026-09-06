@@ -13,7 +13,7 @@ export function passesPublishGate(row, phase, selectedCount) {
 
     for (let i = 1; i <= totalQAs; i++) {
         const answerField = targetRow[`qa_${i}_answer`] || '';
-        const minLength = i === 5 ? 4 : 20;
+       const minLength = (i === 1 || i === 5) ? 4 : 20;
 if (answerField.trim().length < minLength) failures.push(`qa_${i}_answer must be at least ${minLength} characters.`);
     }
 
