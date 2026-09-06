@@ -120,11 +120,9 @@ function buildPatentQuery(keyword, searchDomain) {
 
     if (keyword) parts.push(keyword);
 
-    if (searchDomain && searchDomain.includes('patents.google.com')) {
-        parts.push('site:patents.google.com');
-    }
-
+    if (!/\binfrared\b|\bswir\b|\bnir\b|\bmwir\b|\blwir\b/i.test(keyword || '')) {
     parts.push('infrared');
+}
     
 
     return parts.join(' ');
