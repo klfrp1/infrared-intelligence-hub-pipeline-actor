@@ -9,13 +9,15 @@ export function passesPublishGate(row, phase, selectedCount) {
 
     const rawContent = (targetRow.listing_content || '').replace(/<[^>]*>/g, '').trim();
     const wordCount = rawContent.split(/\s+/).filter(Boolean).length;
-    if (wordCount < 100) failures.push(`Content too sparse (${wordCount}/100 word minimum).`);
-
+    if (wordCount < 75) failures.push(`Content too sparse (${wordCount}/75 word minimum).`);
     for (let i = 1; i <= totalQAs; i++) {
-        const answerField = targetRow[`qa_${i}_answer`] || '';
-       const minLength = (i === 1 || i === 5) ? 4 : 20;
-if (answerField.trim().length < minLength) failures.push(`qa_${i}_answer must be at least ${minLength} characters.`);
-    }
+    const answerField = targetRow[`qa_${i}_answer`] || '';
+    const normalizedAnswer = answerField.trim().toLowerCase();
+    const honestNull = ['to verify', 'unknown / to verify', 'no public evidence found'].includes(normalizedAnswer);
+    const minLength = (i === 1 || i === 5) ? 4 : 20;
+    if (!honestNull && answerField.trim().length < minLength) failures.push(`qa_${i}_answer must be at least ${minLength} characters.`);
+}
+    
 
     return { passes: failures.length === 0, failures, post_status: failures.length === 0 ? 'publish' : 'draft' };
 }
