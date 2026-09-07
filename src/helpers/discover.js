@@ -78,7 +78,10 @@ const relevantPatentRows = patentRows.filter((patent) => {
 
     if (!infraredMatch) return false;
     if (swirRequired && !/\bswir\b|short[-\s]?wave infrared/.test(text)) return false;
-    if (ingaasRequired && !/\bingaas\b|indium gallium arsenide/.test(text)) return false;
+    const ingaasCoreText = `${patent.title || ''} ${patent.snippet || ''}`.toLowerCase();
+const hasIngaasEvidence = /\bingaas\b|indium gallium arsenide/.test(ingaasCoreText);
+const comparisonOnly = /\b(compared|comparison|alternative|versus|vs\.?|than)\b.{0,80}\b(ingaas|indium gallium arsenide)\b/.test(ingaasCoreText);
+if (ingaasRequired && (!hasIngaasEvidence || comparisonOnly)) return false;
 
     return true;
 });
