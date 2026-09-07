@@ -12,7 +12,12 @@ export function buildOutputRow(seedRow, placesData, openaiData, phase) {
 
     const qaCount = currentPhase === 2 ? 20 : 7;
     for (let i = 1; i <= qaCount; i++) {
-        combined[`qa_${i}_answer`] = aiData[`qa_${i}_answer`] || base[`qa_${i}_answer`] || '';
+        const rawAnswer = aiData[`qa_${i}_answer`] ?? base[`qa_${i}_answer`] ?? '';
+
+combined[`qa_${i}_answer`] =
+    typeof rawAnswer === 'string'
+        ? rawAnswer
+        : (rawAnswer?.text || rawAnswer?.answer || rawAnswer?.value || 'To Verify');
     }
 
     delete combined._ctx_id;
