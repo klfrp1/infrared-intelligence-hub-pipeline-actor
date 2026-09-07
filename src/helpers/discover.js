@@ -82,7 +82,23 @@ const relevantPatentRows = patentRows.filter((patent) => {
 
     return true;
 });
-        for (const patent of relevantPatentRows.slice(0, limit)) {
+       const seenPatentKeys = new Set();
+
+const uniquePatentRows = relevantPatentRows.filter((patent) => {
+    const publicationNumber = String(patent.publicationNumber || '')
+        .toUpperCase()
+        .replace(/\s+/g, '');
+
+    const canonicalPublication = publicationNumber.replace(/[A-Z]\d?$/, '');
+    const title = String(patent.title || '').trim().toLowerCase();
+    const key = canonicalPublication || title;
+
+    if (!key || seenPatentKeys.has(key)) return false;
+
+    seenPatentKeys.add(key);
+    return true;
+}); 
+        for (const patent of uniquePatentRows.slice(0, limit)) {
             normalizedRecords.push(makePatentRecord(patent, {
                 queryKeyword,
                 country,
