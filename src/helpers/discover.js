@@ -64,10 +64,20 @@ if (/^[A-Z]{2}\d{4,}[A-Z]\d?$/.test(exactPublicationNumber)) {
     let normalizedRecords = [];
 
     try {
-        const patentRows = await fetchGooglePatentRows(searchQuery, limit);
+       const queryText = queryKeyword.toLowerCase();
+
 const relevantPatentRows = patentRows.filter((patent) => {
     const text = JSON.stringify(patent).toLowerCase();
-    return /\binfrared\b|near[-\s]?infrared|far[-\s]?infrared|\bnir\b|\bswir\b|\bmwir\b|\blwir\b|thermal imaging|thermograph/.test(text);
+
+    const infraredMatch = /\binfrared\b|near[-\s]?infrared|far[-\s]?infrared|\bnir\b|\bswir\b|\bmwir\b|\blwir\b|thermal imaging|thermograph/.test(text);
+    const swirRequired = /\bswir\b|short[-\s]?wave infrared/.test(queryText);
+    const ingaasRequired = /\bingaas\b|indium gallium arsenide/.test(queryText);
+
+    if (!infraredMatch) return false;
+    if (swirRequired && !/\bswir\b|short[-\s]?wave infrared/.test(text)) return false;
+    if (ingaasRequired && !/\bingaas\b|indium gallium arsenide/.test(text)) return false;
+
+    return true;
 });
         for (const patent of relevantPatentRows.slice(0, limit)) {
             normalizedRecords.push(makePatentRecord(patent, {
