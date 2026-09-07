@@ -64,6 +64,7 @@ if (/^[A-Z]{2}\d{4,}[A-Z]\d?$/.test(exactPublicationNumber)) {
     let normalizedRecords = [];
 
     try {
+        const patentRows = await fetchGooglePatentRows(searchQuery, limit);
        const queryText = queryKeyword.toLowerCase();
 
 const relevantPatentRows = patentRows.filter((patent) => {
