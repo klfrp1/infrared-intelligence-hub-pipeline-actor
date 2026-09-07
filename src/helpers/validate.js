@@ -10,6 +10,30 @@ export function passesPublishGate(row, phase, selectedCount) {
     const rawContent = (targetRow.listing_content || '').replace(/<[^>]*>/g, '').trim();
     const wordCount = rawContent.split(/\s+/).filter(Boolean).length;
     if (wordCount < 75) failures.push(`Content too sparse (${wordCount}/75 word minimum).`);
+    const queryText = `${targetRow.keywords || ''} ${targetRow.listing_name || ''}`.toLowerCase();
+
+const swirIngaasRequested =
+    /\bswir\b|short[-\s]?wave infrared/.test(queryText) &&
+    /\bingaas\b|indium gallium arsenide/.test(queryText);
+
+if (swirIngaasRequested) {
+    const spectralText = String(targetRow.spectral_range || '').toLowerCase();
+    const materialText = String(targetRow.material_composition || '').toLowerCase();
+
+    const hasVerifiedSwir =
+        /\bswir\b|short[-\s]?wave infrared|1300\s*(?:-|to)\s*1700\s*nm/.test(spectralText);
+
+    const hasVerifiedIngaas =
+        /\bingaas\b|indium gallium arsenide/.test(materialText);
+
+    if (!hasVerifiedSwir) {
+        failures.push('SWIR evidence not verified for SWIR InGaAs search.');
+    }
+
+    if (!hasVerifiedIngaas) {
+        failures.push('InGaAs material evidence not verified for SWIR InGaAs search.');
+    }
+}
     for (let i = 1; i <= totalQAs; i++) {
    const answerField = String(targetRow[`qa_${i}_answer`] ?? '');
     const normalizedAnswer = answerField.trim().toLowerCase();
