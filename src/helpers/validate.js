@@ -23,9 +23,17 @@ if (swirIngaasRequested) {
     const hasVerifiedSwir =
         /\bswir\b|short[-\s]?wave infrared|1300\s*(?:-|to)\s*1700\s*nm/.test(spectralText);
 
-   const hasStrongIngaasEvidence =
-    /\bingaas\b|indium gallium arsenide/.test(materialText) &&
-    !/\b(?:may|might|could|possibly|potentially|such as)\b[^.!?]{0,120}\b(?:ingaas|indium gallium arsenide)\b/i.test(rawContent);
+    const uncertainIngaasEvidence =
+        /\b(?:may|might|could|possibly|potentially|such as)\b[^.!?]{0,120}\b(?:ingaas|indium gallium arsenide)\b/i.test(rawContent);
+
+    const affirmativeIngaasEvidence =
+        /\b(?:uses?|utilizes?|employs?|comprises?|contains?|incorporates?|based on)\b[^.!?]{0,140}\b(?:ingaas|indium gallium arsenide)\b/i.test(rawContent);
+
+    const hasStrongIngaasEvidence =
+        /\bingaas\b|indium gallium arsenide/.test(materialText) &&
+        !uncertainIngaasEvidence &&
+        affirmativeIngaasEvidence;
+
     if (!hasVerifiedSwir) {
         failures.push('SWIR evidence not verified for SWIR InGaAs search.');
     }
