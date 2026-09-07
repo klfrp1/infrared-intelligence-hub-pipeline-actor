@@ -11,7 +11,7 @@ export function passesPublishGate(row, phase, selectedCount) {
     const wordCount = rawContent.split(/\s+/).filter(Boolean).length;
     if (wordCount < 75) failures.push(`Content too sparse (${wordCount}/75 word minimum).`);
     for (let i = 1; i <= totalQAs; i++) {
-    const answerField = targetRow[`qa_${i}_answer`] || '';
+   const answerField = String(targetRow[`qa_${i}_answer`] ?? '');
     const normalizedAnswer = answerField.trim().toLowerCase();
     const honestNull = ['to verify', 'unknown / to verify', 'no public evidence found'].includes(normalizedAnswer);
     const minLength = (i === 1 || i === 5) ? 4 : 20;
