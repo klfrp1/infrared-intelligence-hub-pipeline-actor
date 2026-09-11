@@ -19,7 +19,17 @@ const swirIngaasRequested =
 if (swirIngaasRequested) {
     const spectralText = String(targetRow.spectral_range || '').toLowerCase();
     const materialText = String(targetRow.material_composition || '').toLowerCase();
+const sourceText = String(targetRow.source_text || '').toLowerCase();
+const sourceFetched = targetRow.source_fetch_status === 'fetched';
 
+const directSourceIngaasEvidence =
+    sourceFetched &&
+    /\b(?:swir|short[-\s]?wave infrared)\b/.test(sourceText) &&
+    (
+        /\b(?:n-type|p-type)\s+ingaas\s+absorber\s+layer\b/i.test(sourceText) ||
+        /\bingaas[-\s]+based\s+(?:detector|photodetector)\b/i.test(sourceText) ||
+        /\b(?:absorber\s+layer|detector|photodetector)\b[^.!?]{0,120}\b(?:comprises|contains|includes|uses|incorporates)\b[^.!?]{0,120}\b(?:ingaas|indium gallium arsenide)\b/i.test(sourceText)
+    );
     const hasVerifiedSwir =
         /\bswir\b|short[-\s]?wave infrared|1300\s*(?:-|to)\s*1700\s*nm/.test(spectralText);
 
@@ -32,11 +42,14 @@ if (swirIngaasRequested) {
     const directSwirIngaasEvidence =
     /\bcan(?:\s+also)?\s+be\s+implemented\s+as\b[^.!?]{0,160}\b(?:swir|short[-\s]?wave infrared)\b[^.!?]{0,80}\b(?:ingaas|indium gallium arsenide)\b/i.test(rawContent);
 
-const hasStrongIngaasEvidence =
-    /\bingaas\b|indium gallium arsenide/.test(materialText) &&
-    (directSwirIngaasEvidence ||
-        (!uncertainIngaasEvidence && affirmativeIngaasEvidence));
 
+    const hasStrongInGaAsEvidence =
+    /\b(?:ingaas|indium gallium arsenide)\b/.test(materialText) &&
+    (
+        directSourceIngaasEvidence ||
+        directSwirIngaasEvidence ||
+        (!uncertainIngaasEvidence && affirmativeIngaasEvidence)
+    );
     if (!hasVerifiedSwir) {
         failures.push('SWIR evidence not verified for SWIR InGaAs search.');
     }
