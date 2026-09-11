@@ -54,7 +54,7 @@ const directSourceIngaasEvidence =
         failures.push('SWIR evidence not verified for SWIR InGaAs search.');
     }
 
-    if (!hasStrongIngaasEvidence) {
+    {if (!hasStrongInGaAsEvidence) {
         failures.push('InGaAs material evidence not verified for SWIR InGaAs search.');
     }
 }
