@@ -64,7 +64,13 @@ for (const baselineRow of rawRows) {
     const evidenceRow = { ...baselineRow, ...sourceEvidence };
     const openaiData = await enrichWithOpenAI(evidenceRow, openaiApiKey, phase, selectedQuestions);
     const tabularOutput = buildOutputRow(baselineRow, placesData, openaiData, phase);
-    const gateResult = passesPublishGate(tabularOutput, phase, selectedQuestions.length);
+    const gateInput = {
+  ...tabularOutput,
+  source_text: sourceEvidence.source_text || '',
+  source_fetch_status: sourceEvidence.source_fetch_status || ''
+};
+
+const gateResult = passesPublishGate(gateInput, phase, selectedQuestions.length);
     tabularOutput.post_status = 'draft';
     tabularOutput.verification_status = gateResult.passes ? 'Review Passed' : 'Unverified';
     if (gateResult.passes) processedPublishRows.push(tabularOutput);
