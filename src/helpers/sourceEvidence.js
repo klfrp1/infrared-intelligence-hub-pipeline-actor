@@ -57,18 +57,29 @@ const matches = [...priorityMatches, ...generalMatches].filter(
     all.findIndex((item) => item.index === match.index) === index
 );;
 
+const headerText = fullText.slice(0, 6000);
+
 let sourceText;
 
 if (matches.length > 0) {
-  const snippets = matches.slice(0, 12).map((match) => {
-    const start = Math.max(0, match.index - 1000);
-    const end = Math.min(fullText.length, match.index + 2000);
-    return fullText.slice(start, end);
-  });
+    const snippets = matches.slice(0, 12).map((match) => {
+        const start = Math.max(0, match.index - 1000);
+        const end = Math.min(fullText.length, match.index + 2000);
+        return fullText.slice(start, end);
+    });
 
-  sourceText = snippets.join('\n\n--- EVIDENCE SECTION ---\n\n').slice(0, 24000);
+    const technicalEvidence = snippets
+        .join('\n\n--- EVIDENCE SECTION ---\n\n')
+        .slice(0, 18000);
+
+    sourceText = [
+        '--- PATENT HEADER / METADATA ---',
+        headerText,
+        '--- TECHNICAL EVIDENCE ---',
+        technicalEvidence
+    ].join('\n\n').slice(0, 24000);
 } else {
-  sourceText = fullText.slice(0, 12000);
+    sourceText = fullText.slice(0, 24000);
 }
 
     return {
