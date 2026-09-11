@@ -54,11 +54,13 @@ const directSourceIngaasEvidence =
         failures.push('SWIR evidence not verified for SWIR InGaAs search.');
     }
 
-    {if (!hasStrongInGaAsEvidence) {
-        failures.push('InGaAs material evidence not verified for SWIR InGaAs search.');
-    }
+   if (!hasStrongInGaAsEvidence) {
+    failures.push('InGaAs material evidence not verified for SWIR InGaAs search.');
 }
-    for (let i = 1; i <= totalQAs; i++) {
+
+}   // closes if (swirIngaasRequested)
+
+for (let i = 1; i <= totalQAs; i++) {
    const answerField = String(targetRow[`qa_${i}_answer`] ?? '');
     const normalizedAnswer = answerField.trim().toLowerCase();
     const honestNull = ['to verify', 'unknown / to verify', 'no public evidence found'].includes(normalizedAnswer);
