@@ -46,7 +46,16 @@ export async function fetchSourceEvidence(row) {
 const evidenceTerms =
   /\b(swir|short[-\s]?wave infrared|ingaas|indium gallium arsenide|focal[-\s]?plane|photodetector|detector array|absorber layer|spectral range)\b/gi;
 
-const matches = [...fullText.matchAll(evidenceTerms)];
+const priorityEvidenceTerms =
+  /\b(?:n-type|p-type)\s+ingaas\s+absorber\s+layer\b|\bingaas[-\s]+based\s+(?:detector|photodetector)\b|\b(?:swir|short[-\s]?wave infrared)\s+fpa\b/gi;
+
+const priorityMatches = [...fullText.matchAll(priorityEvidenceTerms)];
+const generalMatches = [...fullText.matchAll(evidenceTerms)];
+
+const matches = [...priorityMatches, ...generalMatches].filter(
+  (match, index, all) =>
+    all.findIndex((item) => item.index === match.index) === index
+);;
 
 let sourceText;
 
