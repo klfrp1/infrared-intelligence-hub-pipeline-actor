@@ -41,7 +41,26 @@ export async function fetchSourceEvidence(row) {
         ? response.data
         : JSON.stringify(response.data);
 
-    const sourceText = cleanSourceText(raw).slice(0, 12000);
+    const fullText = cleanSourceText(raw);
+
+const evidenceTerms =
+  /\b(swir|short[-\s]?wave infrared|ingaas|indium gallium arsenide|focal[-\s]?plane|photodetector|detector array|absorber layer|spectral range)\b/gi;
+
+const matches = [...fullText.matchAll(evidenceTerms)];
+
+let sourceText;
+
+if (matches.length > 0) {
+  const snippets = matches.slice(0, 12).map((match) => {
+    const start = Math.max(0, match.index - 1000);
+    const end = Math.min(fullText.length, match.index + 2000);
+    return fullText.slice(start, end);
+  });
+
+  sourceText = snippets.join('\n\n--- EVIDENCE SECTION ---\n\n').slice(0, 24000);
+} else {
+  sourceText = fullText.slice(0, 12000);
+}
 
     return {
       source_url: sourceUrl,
