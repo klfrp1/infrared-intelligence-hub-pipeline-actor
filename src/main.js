@@ -71,6 +71,10 @@ for (const baselineRow of rawRows) {
 };
 
 const gateResult = passesPublishGate(gateInput, phase, selectedQuestions.length);
+    console.log(
+  `Gate result for ${baselineRow.patent_reference_num || baselineRow.listing_name}:`,
+  gateResult.passes ? 'PASS' : gateResult.failures
+);
     tabularOutput.post_status = 'draft';
     tabularOutput.verification_status = gateResult.passes ? 'Review Passed' : 'Unverified';
     if (gateResult.passes) processedPublishRows.push(tabularOutput);
