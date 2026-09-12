@@ -108,7 +108,7 @@ const uniquePatentRows = relevantPatentRows.filter((patent) => {
     seenPatentKeys.add(key);
     return true;
 }); 
-        for (const patent of uniquePatentRows.slice(offset, offset + limit) {
+        for (const patent of uniquePatentRows.slice(offset, offset + limit)) {
             normalizedRecords.push(makePatentRecord(patent, {
                 queryKeyword,
                 country,
