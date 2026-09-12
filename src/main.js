@@ -51,7 +51,7 @@ if (sourceMode === 'seed') {
     const workingSet = phase === 2 ? parsedRecords.filter(r => r.post_status === 'publish') : parsedRecords;
     rawRows = workingSet.slice(startRow, startRow + batchSize);
 } else {
-    rawRows = await discoverListings(keyword, searchDomain, countryFilter, maxItems);
+ rawRows = await discoverListings(keyword, searchDomain, countryFilter, maxItems, startRow);
 }
 
 const processedPublishRows = [];
