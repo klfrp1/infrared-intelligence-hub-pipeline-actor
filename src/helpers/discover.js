@@ -9,10 +9,11 @@ import axios from 'axios';
  * 3. If no real records are found, create fallback manual-review rows
  *    so the pipeline still produces a CSV instead of failing.
  */
-export async function discoverListings(keyword, searchDomain, countryFilter, maxItems) {
+export async function discoverListings(keyword, searchDomain, countryFilter, maxItems, startRow = 0) {
     const queryKeyword = keyword || 'infrared patent';
    const country = countryFilter || 'Global';
     const limit = maxItems ?? 5;
+    const offset = Number(startRow) || 0;
 
     let assignedCategory = 'Infrared Tech';
 
@@ -107,7 +108,7 @@ const uniquePatentRows = relevantPatentRows.filter((patent) => {
     seenPatentKeys.add(key);
     return true;
 }); 
-        for (const patent of uniquePatentRows.slice(0, limit)) {
+        for (const patent of uniquePatentRows.slice(offset, offset + limit) {
             normalizedRecords.push(makePatentRecord(patent, {
                 queryKeyword,
                 country,
