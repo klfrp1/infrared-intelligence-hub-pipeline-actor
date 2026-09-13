@@ -1,8 +1,13 @@
 import axios from 'axios';
+import {
+    canonicalPatentKey,
+    isSuspiciousPublicationNumber,
+    normalizePublicationNumber,
+} from './patentId.js';
 
 /**
  * Patent-first discovery for the Infrared Intelligence Hub.
- * 
+ *
  * Goal:
  * 1. Try to pull real patent-style records from Google Patents.
  * 2. Normalize them into the hub listing format.
@@ -11,7 +16,7 @@ import axios from 'axios';
  */
 export async function discoverListings(keyword, searchDomain, countryFilter, maxItems, startRow = 0) {
     const queryKeyword = keyword || 'infrared patent';
-   const country = countryFilter || 'Global';
+    const country = countryFilter || 'Global';
     const limit = maxItems ?? 5;
     const offset = Number(startRow) || 0;
 
@@ -28,86 +33,101 @@ export async function discoverListings(keyword, searchDomain, countryFilter, max
     } else if (/sensor|thermal|imaging|camera|swir|mwir|lwir/i.test(queryKeyword)) {
         assignedCategory = 'Infrared Sensors & Imaging';
     }
-    const exactPublicationNumber = queryKeyword.trim().toUpperCase();
 
-if (/^[A-Z]{2}\d{4,}[A-Z]\d?$/.test(exactPublicationNumber)) {
-    const patentUrl = `https://patents.google.com/patent/${exactPublicationNumber}/en`;
+    const exactPublicationNumber = normalizePublicationNumber(queryKeyword);
 
-    console.log(
-        `Exact patent number detected. Using direct Google Patents URL: ${patentUrl}`
-    );
+    if (exactPublicationNumber && !isSuspiciousPublicationNumber(exactPublicationNumber)) {
+        const patentUrl = `https://patents.google.com/patent/${exactPublicationNumber}/en`;
 
-    return [
-        makePatentRecord(
-            {
-                title: exactPublicationNumber,
-                publicationNumber: exactPublicationNumber,
-                assignee: '',
-                snippet: `Direct Google Patents lookup for ${exactPublicationNumber}`,
-                url: patentUrl,
-                filingDate: '',
-                publicationDate: '',
-                status: 'To Verify',
-            },
-            {
-                queryKeyword,
-                country,
-                assignedCategory: 'Infrared Patents',
-            }
-        ),
-    ];
-}
+        console.log(
+            `Exact patent number detected. Using direct Google Patents URL: ${patentUrl}`
+        );
+
+        return [
+            makePatentRecord(
+                {
+                    title: exactPublicationNumber,
+                    publicationNumber: exactPublicationNumber,
+                    assignee: '',
+                    snippet: `Direct Google Patents lookup for ${exactPublicationNumber}`,
+                    url: patentUrl,
+                    filingDate: '',
+                    publicationDate: '',
+                    status: 'To Verify',
+                },
+                {
+                    queryKeyword,
+                    country,
+                    assignedCategory: 'Infrared Patents',
+                }
+            ),
+        ];
+    }
 
     const searchQuery = buildPatentQuery(queryKeyword, searchDomain);
 
     console.log(`Starting Google Patents discovery for query: "${searchQuery}" with limit: ${limit}`);
 
-    let normalizedRecords = [];
+    const normalizedRecords = [];
 
     try {
-        
         const candidateLimit = Math.max(limit * 5, 50);
         const patentRows = await fetchGooglePatentRows(searchQuery, candidateLimit);
-       const queryText = queryKeyword.toLowerCase();
+        const queryText = queryKeyword.toLowerCase();
 
-const relevantPatentRows = patentRows.filter((patent) => {
-    const text = JSON.stringify(patent).toLowerCase();
+        const relevantPatentRows = patentRows.filter((patent) => {
+            const normalizedPublication = normalizePublicationNumber(patent.publicationNumber || '');
 
-    const infraredMatch = /\binfrared\b|near[-\s]?infrared|far[-\s]?infrared|\bnir\b|\bswir\b|\bmwir\b|\blwir\b|thermal imaging|thermograph/.test(text);
-    const swirRequired = /\bswir\b|short[-\s]?wave infrared/.test(queryText);
-    const ingaasRequired = /\bingaas\b|indium gallium arsenide/.test(queryText);
+            if (patent.publicationNumber && !normalizedPublication) return false;
+            if (normalizedPublication && isSuspiciousPublicationNumber(normalizedPublication)) return false;
 
-    if (!infraredMatch) return false;
-    const swirCoreText = `${patent.title || ''} ${patent.snippet || ''}`.toLowerCase();
-const hasSwirEvidence = /\bswir\b|short[-\s]?wave infrared/.test(swirCoreText);
-const swirComparisonOnly = /\b(compared|comparison|alternative|versus|vs\.?|than)\b.{0,80}\b(swir|short[-\s]?wave infrared)\b/.test(swirCoreText);
-if (swirRequired && (!hasSwirEvidence || swirComparisonOnly)) return false;
-    const ingaasCoreText = `${patent.title || ''} ${patent.snippet || ''}`.toLowerCase();
-    const swirIngaasPairRequired = swirRequired && ingaasRequired;
-const hasSwirIngaasPair = /(?:\bswir\b|short[-\s]?wave infrared)[\s\S]{0,120}(?:\bingaas\b|indium gallium arsenide)|(?:\bingaas\b|indium gallium arsenide)[\s\S]{0,120}(?:\bswir\b|short[-\s]?wave infrared)/.test(ingaasCoreText);
-if (swirIngaasPairRequired && !hasSwirIngaasPair) return false;
-const hasIngaasEvidence = /\bingaas\b|indium gallium arsenide/.test(ingaasCoreText);
-const comparisonOnly = /\b(compared|comparison|alternative|versus|vs\.?|than)\b.{0,80}\b(ingaas|indium gallium arsenide)\b/.test(ingaasCoreText);
-if (ingaasRequired && (!hasIngaasEvidence || comparisonOnly)) return false;
+            const text = JSON.stringify(patent).toLowerCase();
+            const infraredMatch = /\binfrared\b|near[-\s]?infrared|far[-\s]?infrared|\bnir\b|\bswir\b|\bmwir\b|\blwir\b|thermal imaging|thermograph/.test(text);
+            const swirRequired = /\bswir\b|short[-\s]?wave infrared/.test(queryText);
+            const ingaasRequired = /\bingaas\b|indium gallium arsenide/.test(queryText);
 
-    return true;
-});
-       const seenPatentKeys = new Set();
+            if (!infraredMatch) return false;
 
-const uniquePatentRows = relevantPatentRows.filter((patent) => {
-    const publicationNumber = String(patent.publicationNumber || '')
-        .toUpperCase()
-        .replace(/\s+/g, '');
+            const swirCoreText = `${patent.title || ''} ${patent.snippet || ''}`.toLowerCase();
+            const hasSwirEvidence = /\bswir\b|short[-\s]?wave infrared/.test(swirCoreText);
+            const swirComparisonOnly = /\b(compared|comparison|alternative|versus|vs\.?|than)\b.{0,80}\b(swir|short[-\s]?wave infrared)\b/.test(swirCoreText);
 
-    const canonicalPublication = publicationNumber.replace(/[A-Z]\d?$/, '');
-    const title = String(patent.title || '').trim().toLowerCase();
-    const key = canonicalPublication || title;
+            if (swirRequired && (!hasSwirEvidence || swirComparisonOnly)) return false;
 
-    if (!key || seenPatentKeys.has(key)) return false;
+            const ingaasCoreText = `${patent.title || ''} ${patent.snippet || ''}`.toLowerCase();
+            const swirIngaasPairRequired = swirRequired && ingaasRequired;
+            const hasSwirIngaasPair = /(?:\bswir\b|short[-\s]?wave infrared)[\s\S]{0,120}(?:\bingaas\b|indium gallium arsenide)|(?:\bingaas\b|indium gallium arsenide)[\s\S]{0,120}(?:\bswir\b|short[-\s]?wave infrared)/.test(ingaasCoreText);
 
-    seenPatentKeys.add(key);
-    return true;
-}); 
+            if (swirIngaasPairRequired && !hasSwirIngaasPair) return false;
+
+            const hasIngaasEvidence = /\bingaas\b|indium gallium arsenide/.test(ingaasCoreText);
+            const comparisonOnly = /\b(compared|comparison|alternative|versus|vs\.?|than)\b.{0,80}\b(ingaas|indium gallium arsenide)\b/.test(ingaasCoreText);
+
+            if (ingaasRequired && (!hasIngaasEvidence || comparisonOnly)) return false;
+
+            return true;
+        });
+
+        const seenPatentKeys = new Set();
+
+        const uniquePatentRows = relevantPatentRows.filter((patent) => {
+            const publicationNumber = normalizePublicationNumber(patent.publicationNumber || '');
+            const canonicalPublication = canonicalPatentKey(publicationNumber);
+            const title = String(patent.title || '').trim().toLowerCase();
+            const key = canonicalPublication || title;
+
+            if (!key || seenPatentKeys.has(key)) return false;
+
+            seenPatentKeys.add(key);
+
+            if (publicationNumber) {
+                patent.publicationNumber = publicationNumber;
+                patent.url = `https://patents.google.com/patent/${publicationNumber}/en`;
+            }
+
+            return true;
+        });
+
         for (const patent of uniquePatentRows.slice(offset, offset + limit)) {
             normalizedRecords.push(makePatentRecord(patent, {
                 queryKeyword,
@@ -160,9 +180,8 @@ function buildPatentQuery(keyword, searchDomain) {
     if (keyword) parts.push(keyword);
 
     if (!/\binfrared\b|\bswir\b|\bnir\b|\bmwir\b|\blwir\b/i.test(keyword || '')) {
-    parts.push('infrared');
-}
-    
+        parts.push('infrared');
+    }
 
     return parts.join(' ');
 }
@@ -179,7 +198,6 @@ async function fetchGooglePatentRows(searchQuery, limit) {
     });
 
     const data = response.data;
-
     const patentRows = [];
 
     // Main expected Google Patents shape.
@@ -196,12 +214,16 @@ async function fetchGooglePatentRows(searchQuery, limit) {
                 cleanText(result?.title) ||
                 cleanText(cluster?.title);
 
-            const publicationNumber =
+            const rawPublicationNumber =
                 cleanText(patent?.publication_number) ||
                 cleanText(patent?.publicationNumber) ||
                 cleanText(result?.publication_number);
 
+            const publicationNumber = normalizePublicationNumber(rawPublicationNumber);
+
             if (!title && !publicationNumber) continue;
+            if (rawPublicationNumber && !publicationNumber) continue;
+            if (publicationNumber && isSuspiciousPublicationNumber(publicationNumber)) continue;
 
             const assignee =
                 cleanText(patent?.assignee) ||
@@ -236,17 +258,20 @@ async function fetchGooglePatentRows(searchQuery, limit) {
         }
     }
 
-    // Backup parser for unexpected response shapes.
+    // Backup parser for unexpected response shapes. Every candidate is
+    // normalized and suspicious malformed identifiers are rejected before
+    // they can become Hub records.
     const rawText = JSON.stringify(data);
     const publicationMatches = [...rawText.matchAll(/\b(US|WO|EP|CN|JP|KR|DE|GB)\d{4,}[A-Z]?\d?\b/g)];
-
     const seen = new Set();
 
     for (const match of publicationMatches) {
-        const publicationNumber = match[0];
+        const publicationNumber = normalizePublicationNumber(match[0]);
+        const key = canonicalPatentKey(publicationNumber);
 
-        if (seen.has(publicationNumber)) continue;
-        seen.add(publicationNumber);
+        if (!publicationNumber || !key || isSuspiciousPublicationNumber(publicationNumber)) continue;
+        if (seen.has(key)) continue;
+        seen.add(key);
 
         patentRows.push({
             title: `${searchQuery} patent record ${publicationNumber}`,
@@ -271,14 +296,17 @@ function makePatentRecord(patent, context) {
     const { queryKeyword, country, assignedCategory } = context;
 
     const title = patent.title || `${queryKeyword} patent record`;
-    const publicationNumber = patent.publicationNumber || '';
+    const publicationNumber = normalizePublicationNumber(patent.publicationNumber || '');
+    const patentUrl = publicationNumber
+        ? `https://patents.google.com/patent/${publicationNumber}/en`
+        : (patent.url || 'https://patents.google.com');
 
     return {
         listing_name: title,
         listing_type: 'Patent / Technology Record',
         admin_category: assignedCategory,
         country,
-        website_url: patent.url || 'https://patents.google.com',
+        website_url: patentUrl,
         patent_reference_num: publicationNumber,
         operational_status: patent.status || 'To Verify',
         company_assignee: patent.assignee || 'Unknown / To Verify',
@@ -286,7 +314,7 @@ function makePatentRecord(patent, context) {
         spectral_range: inferSpectralRange(title, patent.snippet),
         material_composition: inferMaterial(title, patent.snippet),
         technical_specifications: patent.snippet || 'Patent record discovered from Google Patents.',
-        source_url: patent.url || 'https://patents.google.com',
+        source_url: patentUrl,
         verification_status: 'Needs Review',
         keywords: queryKeyword,
         listing_content: `<p>${escapeHtml(patent.snippet || title)}</p>`,
@@ -300,7 +328,7 @@ function makePatentRecord(patent, context) {
         qa_2_answer: publicationNumber || 'Unknown / To Verify',
         qa_3_answer: `${assignedCategory}; Spectral range: ${inferSpectralRange(title, patent.snippet)}`,
         qa_4_answer: inferMaterial(title, patent.snippet),
-        qa_5_answer: patent.url || 'https://patents.google.com',
+        qa_5_answer: patentUrl,
         qa_6_answer: patent.publicationDate || patent.filingDate || 'Unknown / To Verify',
         qa_7_answer: patent.status || 'To Verify',
     };
