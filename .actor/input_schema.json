@@ -65,6 +65,20 @@
       "default": "infrared-intelligence-hub_seed.csv",
       "editor": "textfield"
     },
+    "historyStoreName": {
+      "type": "string",
+      "title": "Persistent History Store",
+      "description": "Named Apify key-value store used to remember Review Passed patent records across runs.",
+      "default": "infrared-intelligence-hub-data",
+      "editor": "textfield"
+    },
+    "historyKey": {
+      "type": "string",
+      "title": "Persistent History Key",
+      "description": "Key used inside the persistent store for processed Review Passed patent history.",
+      "default": "infrared-intelligence-hub_processed-history",
+      "editor": "textfield"
+    },
     "phase": {
       "type": "integer",
       "title": "Pipeline Phase",
