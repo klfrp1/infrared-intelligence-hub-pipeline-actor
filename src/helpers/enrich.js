@@ -8,11 +8,17 @@ export async function enrichWithOpenAI(row, openaiApiKey, phase, selectedQuestio
     const currentPhase = phase ?? 1;
     const apiKey = openaiApiKey;
     const targetRow = row || {};
-    const questions = selectedQuestions || [];
+    const questions = Array.isArray(selectedQuestions) ? selectedQuestions : [];
     const chosenModel = modelOverride || 'gpt-4.1-nano';
 
     if (!apiKey) return {};
     if (currentPhase === 2) return {};
+
+    const qaKeys = questions.map((_, index) => `qa_${index + 1}_answer`);
+    const qaKeyBlock = qaKeys.length > 0 ? `\n${qaKeys.join('\n')}` : '';
+    const questionBlock = questions
+        .map((question, index) => `${index + 1}. ${question}`)
+        .join('\n');
 
     const systemPrompt = `
 You are a database enrichment engine for an Infrared Patents, Materials, and Industrial Applications directory.
@@ -49,7 +55,7 @@ For operational_status, use the patent status shown by the source.
 For technical_specifications, summarize only technical details explicitly supported by the source.
 For unsupported metadata fields, use "Unknown / To Verify".
 
-Also return the required qa_1_answer through qa_7_answer fields.
+Also return one qa_N_answer field for every supplied question.
 `;
 
     const userPrompt = `
@@ -68,24 +74,10 @@ application_area
 technical_specifications
 spectral_range
 material_composition
-listing_content
-qa_1_answer
-qa_2_answer
-qa_3_answer
-qa_4_answer
-qa_5_answer
-qa_6_answer
-qa_7_answer
+listing_content${qaKeyBlock}
 
 Questions:
-
-1. ${questions[0] || ''}
-2. ${questions[1] || ''}
-3. ${questions[2] || ''}
-4. ${questions[3] || ''}
-5. ${questions[4] || ''}
-6. ${questions[5] || ''}
-7. ${questions[6] || ''}
+${questionBlock}
 `;
 
     const userPromptWithEvidence = `
@@ -115,21 +107,21 @@ If a fact is not supported, use "Unknown / To Verify".
                             '\n' +
                             listingContentRule +
                             '\n' +
-                            metadataRule
+                            metadataRule,
                     },
                     {
                         role: 'user',
-                        content: userPromptWithEvidence
-                    }
+                        content: userPromptWithEvidence,
+                    },
                 ],
                 temperature: 0.1,
-                response_format: { type: 'json_object' }
+                response_format: { type: 'json_object' },
             },
             {
                 headers: {
                     Authorization: `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
             }
         );
 
