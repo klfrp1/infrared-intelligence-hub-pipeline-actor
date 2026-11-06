@@ -9,10 +9,10 @@ export async function enrichWithOpenAI(row, openaiApiKey, phase, selectedQuestio
     const apiKey = openaiApiKey;
     const targetRow = row || {};
     const questions = Array.isArray(selectedQuestions) ? selectedQuestions : [];
-    const chosenModel = modelOverride || 'gpt-4.1-nano';
+    const chosenModel = modelOverride || 'gpt-5.6-luna';
 
-    if (!apiKey) return {};
     if (currentPhase === 2) return {};
+    if (!apiKey) throw new Error('OpenAI enrichment requires an API key in phase 1.');
 
     const qaKeys = questions.map((_, index) => `qa_${index + 1}_answer`);
     const qaKeyBlock = qaKeys.length > 0 ? `\n${qaKeys.join('\n')}` : '';
@@ -114,8 +114,8 @@ If a fact is not supported, use "Unknown / To Verify".
                         content: userPromptWithEvidence,
                     },
                 ],
-                temperature: 0.1,
                 response_format: { type: 'json_object' },
+                reasoning_effort: 'none',
             },
             {
                 headers: {
@@ -127,10 +127,11 @@ If a fact is not supported, use "Unknown / To Verify".
 
         return JSON.parse(response.data.choices[0].message.content.trim());
     } catch (error) {
-        console.error(
-            `OpenAI enrichment error on ${targetRow.listing_name}:`,
-            error.message
+        const status = error.response?.status;
+        const code = error.response?.data?.error?.code || error.response?.data?.error?.type;
+        throw new Error(
+            `OpenAI enrichment failed for ${targetRow.listing_name || 'record'} (${chosenModel}): ` +
+            `${status ? `HTTP ${status}` : error.message}${code ? `, ${code}` : ''}`
         );
-        return {};
     }
 }
