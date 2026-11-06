@@ -23,6 +23,7 @@ const {
     countryFilter,
     maxItems,
     openaiApiKey,
+    openaiModel,
     outputKvKey,
     kvStoreId,
     inputKvKey,
@@ -158,7 +159,8 @@ for (const baselineRow of rowsToProcess) {
         evidenceRow,
         openaiApiKey,
         phase,
-        selectedQuestions
+        selectedQuestions,
+        openaiModel
     );
 
     const tabularOutput = buildOutputRow(
